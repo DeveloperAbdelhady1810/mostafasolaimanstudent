@@ -5,15 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-<<<<<<< Updated upstream
-	<string>Mostafa Solaiman</string>
+	<string>Mr. Mostafa Solaiman</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Bluetooth lets your assistant detect you in class so your attendance is recorded without waiting in line.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>Bluetooth lets your assistant detect you in class so your attendance is recorded without waiting in line.</string>
-=======
-	<string>Mr. Mostafa Solaiman</string>
->>>>>>> Stashed changes
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
