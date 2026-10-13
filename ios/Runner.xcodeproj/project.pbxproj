@@ -494,6 +494,7 @@
 				DEVELOPMENT_TEAM = 6X8AX94P84;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 =======
@@ -501,6 +502,8 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of 5134fac (wrong)
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -686,6 +689,7 @@
 				DEVELOPMENT_TEAM = 6X8AX94P84;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 =======
@@ -693,6 +697,8 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of 5134fac (wrong)
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -718,6 +724,7 @@
 				DEVELOPMENT_TEAM = 6X8AX94P84;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 =======
@@ -725,6 +732,8 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 >>>>>>> Stashed changes
+=======
+>>>>>>> parent of 5134fac (wrong)
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
