@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
 import '../providers/auth_provider.dart';
+import '../providers/locale_provider.dart';
 import '../services/api_client.dart';
+import '../services/social_auth_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'complete_profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +26,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _busy = false;
   bool _hide = true;
   String? _error;
+
+  /// Which social button is waiting for the provider / server (null = none).
+  SocialProvider? _socialBusy;
 
   @override
   void dispose() {
@@ -43,6 +50,55 @@ class _LoginScreenState extends State<LoginScreen> {
         return context.trRead('err_too_many');
       default:
         return context.trRead('err_generic');
+    }
+  }
+
+  String _socialMessageFor(ApiException e) {
+    if (e.isOffline) return context.trRead('err_network');
+    switch (e.status) {
+      case 401:
+        return context.trRead('err_social_rejected');
+      case 403:
+        return context.trRead(e.code == 'not_student' ? 'err_not_student' : 'err_blocked');
+      case 410:
+        return context.trRead('err_social_expired');
+      case 422:
+        return context.trRead(e.code == 'no_email' ? 'err_no_email' : 'err_social_rejected');
+      case 429:
+        return context.trRead('err_too_many');
+      case 503:
+        return context.trRead('err_social_not_ready');
+      default:
+        return context.trRead('err_generic');
+    }
+  }
+
+  Future<void> _social(SocialProvider provider) async {
+    if (_busy || _socialBusy != null) return;
+    FocusScope.of(context).unfocus();
+    final auth = context.read<AuthProvider>();
+    setState(() {
+      _socialBusy = provider;
+      _error = null;
+    });
+    try {
+      final pending = await auth.socialLogin(provider);
+      // Signed in: AuthGate swaps this page for the app. Otherwise the email has no student account yet.
+      if (pending != null && mounted) {
+        await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => CompleteProfileScreen(pending: pending)));
+      }
+    } on SocialAuthException catch (e) {
+      if (e.kind != SocialFailure.cancelled) debugPrint('Social sign-in: $e');
+      if (mounted && e.kind != SocialFailure.cancelled) {
+        setState(() => _error = context.trRead(e.kind == SocialFailure.unavailable ? 'err_social_unavailable' : 'err_social_failed'));
+      }
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = _socialMessageFor(e));
+    } catch (e) {
+      debugPrint('Social sign-in failed: $e');
+      if (mounted) setState(() => _error = context.trRead('err_social_failed'));
+    } finally {
+      if (mounted) setState(() => _socialBusy = null);
     }
   }
 
@@ -169,8 +225,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                       const SizedBox(height: 20),
-                      GradientButton(label: context.tr('sign_in'), loading: _busy, onPressed: _submit),
-                      const SizedBox(height: 16),
+                      GradientButton(label: context.tr('sign_in'), loading: _busy, onPressed: _socialBusy != null ? null : _submit),
+                      const SizedBox(height: 20),
+                      Row(children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(context.tr('or_continue_with'),
+                              style: const TextStyle(fontSize: 12.5, color: Brand.muted, fontWeight: FontWeight.w600)),
+                        ),
+                        const Expanded(child: Divider()),
+                      ]),
+                      const SizedBox(height: 14),
+                      _GoogleButton(
+                        label: context.tr('continue_google'),
+                        loading: _socialBusy == SocialProvider.google,
+                        onPressed: (_busy || _socialBusy != null) ? null : () => _social(SocialProvider.google),
+                      ),
+                      if (context.read<AuthProvider>().appleAvailable) ...[
+                        const SizedBox(height: 12),
+                        _AppleButton(
+                          loading: _socialBusy == SocialProvider.apple,
+                          text: context.read<LocaleProvider>().isArabic ? 'المتابعة باستخدام Apple' : 'Continue with Apple',
+                          onPressed: (_busy || _socialBusy != null) ? null : () => _social(SocialProvider.apple),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Icon(Icons.wifi_rounded, size: 16, color: Brand.muted),
                         const SizedBox(width: 8),
@@ -197,6 +277,78 @@ class _LoginScreenState extends State<LoginScreen> {
             ]),
           ),
         ]),
+      ),
+    );
+  }
+}
+
+
+class _GoogleButton extends StatelessWidget {
+  const _GoogleButton({required this.label, required this.loading, required this.onPressed});
+
+  final String label;
+  final bool loading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        key: const Key('google_button'),
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Brand.text,
+          side: const BorderSide(color: Brand.border, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: loading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Brand.primary))
+            : Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
+                Image.asset('assets/google_g.png', width: 22, height: 22),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700)),
+                ),
+              ]),
+      ),
+    );
+  }
+}
+
+/// Apple's own button style (black, Apple logo) as their design guidelines require.
+class _AppleButton extends StatelessWidget {
+  const _AppleButton({required this.loading, required this.text, required this.onPressed});
+
+  final bool loading;
+  final String text;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return Container(
+        key: const Key('apple_button'),
+        height: 52,
+        decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(14)),
+        alignment: Alignment.center,
+        child: const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white)),
+      );
+    }
+    return Opacity(
+      opacity: onPressed == null ? 0.55 : 1,
+      child: IgnorePointer(
+        ignoring: onPressed == null,
+        child: SignInWithAppleButton(
+          key: const Key('apple_button'),
+          onPressed: onPressed ?? () {},
+          text: text,
+          height: 52,
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          style: SignInWithAppleButtonStyle.black,
+        ),
       ),
     );
   }

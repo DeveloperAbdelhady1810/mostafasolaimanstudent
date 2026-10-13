@@ -7,12 +7,15 @@ import 'package:http/http.dart' as http;
 import '../config.dart';
 
 class ApiException implements Exception {
-  ApiException(this.status, this.message, {this.code});
+  ApiException(this.status, this.message, {this.code, this.fieldErrors = const {}});
 
   /// HTTP status, or 0 when there was no connection at all.
   final int status;
   final String message;
   final String? code;
+
+  /// Laravel validation errors (HTTP 422): field name -> first message for that field.
+  final Map<String, String> fieldErrors;
 
   bool get isOffline => status == 0;
 
@@ -80,10 +83,19 @@ class ApiClient {
     if (res.statusCode == 401 && token != null) onUnauthorized?.call();
 
     final map = data is Map ? data : const {};
+    final fieldErrors = <String, String>{};
+    final errors = map['errors'];
+    if (errors is Map) {
+      errors.forEach((field, messages) {
+        final first = messages is List && messages.isNotEmpty ? messages.first : messages;
+        if (first != null) fieldErrors[field.toString()] = first.toString();
+      });
+    }
     throw ApiException(
       res.statusCode,
       (map['message'] ?? 'Request failed').toString(),
       code: map['code']?.toString(),
+      fieldErrors: fieldErrors,
     );
   }
 

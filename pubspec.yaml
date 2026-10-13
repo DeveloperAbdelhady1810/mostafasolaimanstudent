@@ -51,6 +51,8 @@ dependencies:
   flutter_ble_peripheral: ^3.1.0
   audioplayers: ^6.7.1
   flutter_blue_plus: ^2.3.14
+  google_sign_in: ^7.2.0
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +79,7 @@ flutter:
 
   assets:
     - assets/logo.png
+    - assets/google_g.png
     - assets/sounds/tick.wav
 
 flutter_launcher_icons:

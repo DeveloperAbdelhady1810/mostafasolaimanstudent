@@ -24,6 +24,7 @@ import 'services/push_service.dart';
 import 'services/reply_scanner.dart';
 import 'services/tick_player.dart';
 import 'services/secure_store.dart';
+import 'services/social_auth_service.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -55,6 +56,7 @@ class StudentApp extends StatefulWidget {
     this.advertiser,
     this.replyScanner,
     this.tickPlayer,
+    this.social,
   });
 
   final LocaleProvider locale;
@@ -67,6 +69,7 @@ class StudentApp extends StatefulWidget {
   final BleAdvertiser? advertiser;
   final ReplyScanner? replyScanner;
   final TickPlayer? tickPlayer;
+  final SocialAuth? social;
 
   @override
   State<StudentApp> createState() => _StudentAppState();
@@ -88,7 +91,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     super.initState();
     api = widget.api ?? ApiClient();
     store = widget.store ?? SecureStore();
-    auth = AuthProvider(api, store);
+    auth = AuthProvider(api, store, social: widget.social);
     data = DataProvider(api, store, connectivity: widget.connectivity);
     push = PushService(api);
     code = CodeProvider(auth);

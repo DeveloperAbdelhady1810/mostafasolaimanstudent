@@ -10,6 +10,11 @@ Package / bundle id: `online.mostafasolaiman.student`. English + Arabic (RTL), w
 - **Rotating QR** (`MSQ1:<student_no>:<counter>:<mac>`, changes every 30 s, HMAC-SHA256 with a per-student secret
   fetched once after sign-in). While the server feature flag is off, it shows the plain `LQ-######` ID code that the
   existing assistant app already scans.
+- **Continue with Google / Apple** (same as the website): the phone signs in natively and sends the provider's identity
+  token to the server, which verifies it itself (signature, issuer, audience, expiry; Apple also checks a one-time nonce).
+  An email that already has a student account is signed in; a new email opens the same profile form as the website's
+  sign-up (stage, grade, division, study mode / Zoom group, school, gender, age, phone, parent phone) and the server creates the
+  student + parent record. Teacher/parent/admin emails and suspended students are refused. Apple's button is shown on iPhone only.
 - **Attendance** history and **notifications**, cached for offline viewing, refreshed when online.
 - **Push notifications** (Firebase Cloud Messaging), e.g. "your attendance was recorded".
 
@@ -65,6 +70,22 @@ Firebase is initialised from `lib/firebase_options.dart` (explicit options), so 
 `lib/firebase_options.dart.example` to `lib/firebase_options.dart` and fill in the values from the Firebase console
 (or copy the real file from the machine that has it). The push service-account key is never part of this repo; it
 lives only on the server. Signing keys, `.env` files and API keys must never be committed.
+
+### Google / Apple sign-in setup
+
+Server (already deployed): `POST /api/auth/social/{google,apple,complete}`, `GET /api/auth/social/{config,options}`.
+Google tokens are accepted for the website's web client id (`GOOGLE_CLIENT_ID`) and, optionally, a dedicated
+`GOOGLE_MOBILE_SERVER_CLIENT_ID` / `GOOGLE_MOBILE_CLIENT_IDS` in the server `.env`; Apple tokens for the bundle id
+`online.mostafasolaiman.student` (`APPLE_MOBILE_CLIENT_ID`).
+
+- **Android**: the Android OAuth client (package + SHA-1) must live in the SAME Google Cloud project as the web client id the
+  server hands out. Easiest: Firebase console > Authentication > Sign-in method > enable Google, then add the SHA-1 of every
+  keystore you build with (debug on each machine, release, and Play App Signing) in Project settings > your Android app.
+  Debug SHA-1: `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android`.
+- **iOS Google**: copy `ios/Flutter/Secrets.xcconfig.example` to `ios/Flutter/Secrets.xcconfig` (git-ignored) and fill in
+  `GOOGLE_IOS_CLIENT_ID` and `GOOGLE_REVERSED_CLIENT_ID` (from the iOS OAuth client / the new GoogleService-Info.plist).
+- **iOS Apple**: `Runner.entitlements` already has `com.apple.developer.applesignin`; enable the "Sign In with Apple"
+  capability for the App ID in the Apple developer portal / Xcode (Signing & Capabilities).
 
 ### iOS (needs a Mac)
 

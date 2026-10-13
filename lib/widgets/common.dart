@@ -168,3 +168,28 @@ class SoftCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Card(child: Padding(padding: padding, child: child));
 }
+
+/// A message with a retry button (used when a screen's data could not be loaded).
+class EmptyStateRetry extends StatelessWidget {
+  const EmptyStateRetry({super.key, required this.message, required this.retryLabel, required this.onRetry});
+
+  final String message;
+  final String retryLabel;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.cloud_off_rounded, size: 44, color: Brand.muted),
+          const SizedBox(height: 14),
+          Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14.5, height: 1.5, color: Brand.muted)),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: onRetry, style: FilledButton.styleFrom(backgroundColor: Brand.primary), child: Text(retryLabel)),
+        ]),
+      ),
+    );
+  }
+}
