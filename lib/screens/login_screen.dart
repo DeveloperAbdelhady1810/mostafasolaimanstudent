@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(children: [
               Text(context.tr('no_account'), style: const TextStyle(color: Brand.muted, fontSize: 13.5)),
               TextButton(
-                onPressed: () => launchUrl(Uri.parse('$siteUrl/register'), mode: LaunchMode.externalApplication),
+                onPressed: () => launchUrl(Uri.parse('$siteUrl/register/student'), mode: LaunchMode.externalApplication),
                 child: Text(context.tr('signup_web'), style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.primaryDark)),
               ),
             ]),
