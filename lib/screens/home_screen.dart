@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/broadcast_provider.dart';
 import '../providers/code_provider.dart';
 import '../providers/data_provider.dart';
 import '../providers/locale_provider.dart';
@@ -77,6 +78,10 @@ class HomeScreen extends StatelessWidget {
                     _IdCard(number: auth.studentNumber!),
                     const SizedBox(height: 14),
                     const _CodeCard(),
+                    if (auth.hasSecureCode) ...[
+                      const SizedBox(height: 14),
+                      const _BroadcastCard(),
+                    ],
                   ],
                   const SizedBox(height: 14),
                   const _TilesRow(),
@@ -262,6 +267,117 @@ class _CodeCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(context.tr('code_basic_note'), textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Brand.muted, height: 1.4)),
         ],
+      ]),
+    );
+  }
+}
+
+/// Bluetooth check-in: broadcasts the rotating code for 60 s so the assistant's radar can see the whole class.
+class _BroadcastCard extends StatelessWidget {
+  const _BroadcastCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final b = context.watch<BroadcastProvider>();
+    final active = b.status == BroadcastStatus.active;
+    final starting = b.status == BroadcastStatus.starting;
+
+    String message;
+    switch (b.status) {
+      case BroadcastStatus.active:
+        message = context.tr('ble_active');
+        break;
+      case BroadcastStatus.starting:
+        message = context.tr('ble_starting');
+        break;
+      case BroadcastStatus.needsPermission:
+        message = context.tr('ble_need_permission');
+        break;
+      case BroadcastStatus.bluetoothOff:
+        message = context.tr('ble_off');
+        break;
+      case BroadcastStatus.unsupported:
+        message = context.tr('ble_unsupported');
+        break;
+      case BroadcastStatus.error:
+        message = context.tr('ble_error');
+        break;
+      case BroadcastStatus.idle:
+        message = context.tr('ble_idle');
+        break;
+    }
+
+    final problem = b.status == BroadcastStatus.needsPermission ||
+        b.status == BroadcastStatus.bluetoothOff ||
+        b.status == BroadcastStatus.error ||
+        b.status == BroadcastStatus.unsupported;
+    final accent = problem ? Brand.warning : Brand.accent;
+    final canTap = b.status != BroadcastStatus.unsupported && !starting;
+
+    return SoftCard(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(children: [
+        Row(children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(13)),
+            child: Icon(active ? Icons.bluetooth_audio_rounded : Icons.bluetooth_rounded, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(context.tr('ble_title'), style: const TextStyle(fontWeight: FontWeight.w800, color: Brand.text, fontSize: 15.5)),
+              const SizedBox(height: 2),
+              Text(message, style: const TextStyle(fontSize: 12.5, color: Brand.muted, height: 1.4)),
+            ]),
+          ),
+        ]),
+        if (active) ...[
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              key: const Key('ble_progress'),
+              value: b.progress,
+              minHeight: 6,
+              backgroundColor: Brand.border,
+              color: Brand.accent,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(context.tr('ble_seconds_left', {'s': b.secondsLeft}),
+                style: const TextStyle(fontSize: 12, color: Brand.muted, fontWeight: FontWeight.w600)),
+          ),
+        ],
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: active
+              ? OutlinedButton.icon(
+                  key: const Key('ble_stop'),
+                  onPressed: b.stop,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  label: Text(context.tr('ble_stop')),
+                )
+              : FilledButton.icon(
+                  key: const Key('ble_start'),
+                  style: FilledButton.styleFrom(backgroundColor: Brand.primary, minimumSize: const Size.fromHeight(46)),
+                  onPressed: !canTap ? null : () => b.start(userInitiated: true),
+                  icon: starting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.wifi_tethering_rounded),
+                  label: Text(context.tr(b.hasBroadcastBefore ? 'ble_again' : 'ble_start')),
+                ),
+        ),
+        if (b.status == BroadcastStatus.needsPermission)
+          TextButton(
+            key: const Key('ble_settings'),
+            onPressed: b.openSettings,
+            child: Text(context.tr('ble_open_settings')),
+          ),
       ]),
     );
   }

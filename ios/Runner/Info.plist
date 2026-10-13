@@ -5,7 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Student</string>
+	<string>Mostafa Solaiman</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth lets your assistant detect you in class so your attendance is recorded without waiting in line.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth lets your assistant detect you in class so your attendance is recorded without waiting in line.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

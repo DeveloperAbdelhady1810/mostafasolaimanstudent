@@ -11,12 +11,14 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'l10n/strings.dart';
 import 'providers/auth_provider.dart';
+import 'providers/broadcast_provider.dart';
 import 'providers/code_provider.dart';
 import 'providers/data_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/nav_provider.dart';
 import 'screens/home_shell.dart';
 import 'services/api_client.dart';
+import 'services/ble_advertiser.dart';
 import 'services/push_service.dart';
 import 'services/secure_store.dart';
 import 'theme.dart';
@@ -47,6 +49,7 @@ class StudentApp extends StatefulWidget {
     this.api,
     this.store,
     this.connectivity,
+    this.advertiser,
   });
 
   final LocaleProvider locale;
@@ -56,6 +59,7 @@ class StudentApp extends StatefulWidget {
   final ApiClient? api;
   final SecureStore? store;
   final Stream<List<ConnectivityResult>>? connectivity;
+  final BleAdvertiser? advertiser;
 
   @override
   State<StudentApp> createState() => _StudentAppState();
@@ -68,6 +72,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   late final DataProvider data;
   late final PushService push;
   late final CodeProvider code;
+  late final BroadcastProvider broadcast;
   final nav = NavProvider();
 
   @override
@@ -79,6 +84,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     data = DataProvider(api, store, connectivity: widget.connectivity);
     push = PushService(api);
     code = CodeProvider(auth);
+    broadcast = BroadcastProvider(auth, advertiser: widget.advertiser);
 
     auth.onSignedIn = _onSignedIn;
     auth.onBeforeSignOut = () async {
@@ -111,7 +117,12 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   /// Coming back to the app: pick up anything that arrived while it was in the background.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      broadcast.onBackground();
+      return;
+    }
     if (state != AppLifecycleState.resumed || !auth.isLoggedIn) return;
+    broadcast.onForeground();
     final now = DateTime.now();
     if (now.difference(_lastResumeSync).inSeconds < 20) return;
     _lastResumeSync = now;
@@ -132,13 +143,22 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     if (push.permitted) {
       unawaited(push.register());
     } else if (fresh) {
-      unawaited(push.enable()); // ask once, right after a real sign-in
+      // Ask once, right after a real sign-in. The Bluetooth prompt waits its turn: two system
+      // permission dialogs at the same time make Android drop one of them.
+      broadcast.holdAutoStart = true;
+      try {
+        await push.enable();
+      } finally {
+        broadcast.holdAutoStart = false;
+      }
+      broadcast.onForeground();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    broadcast.dispose();
     code.dispose();
     data.dispose();
     push.dispose();
@@ -156,6 +176,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<DataProvider>.value(value: data),
         ChangeNotifierProvider<PushService>.value(value: push),
         ChangeNotifierProvider<CodeProvider>.value(value: code),
+        ChangeNotifierProvider<BroadcastProvider>.value(value: broadcast),
         ChangeNotifierProvider<NavProvider>.value(value: nav),
       ],
       child: Consumer<LocaleProvider>(

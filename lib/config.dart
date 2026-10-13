@@ -1,5 +1,6 @@
 /// Server the app talks to.
-const String apiBaseUrl = 'https://mostafa-solaiman.online/api';
+/// Overridable at build time for test builds: `--dart-define=API_BASE=http://10.0.2.2:8765/api`.
+const String apiBaseUrl = String.fromEnvironment('API_BASE', defaultValue: 'https://mostafa-solaiman.online/api');
 const String siteUrl = 'https://mostafa-solaiman.online';
 
 /// QR format the assistant app already understands (see attendance_assistant's

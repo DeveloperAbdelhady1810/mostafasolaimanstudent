@@ -48,6 +48,7 @@ dependencies:
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
   connectivity_plus: 6.1.5
+  flutter_ble_peripheral: ^3.1.0
 
 dev_dependencies:
   flutter_test:

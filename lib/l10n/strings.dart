@@ -53,6 +53,21 @@ const Map<String, Map<String, String>> appStrings = {
     'id_copied': 'Student ID copied',
     'copy': 'Copy',
 
+    // bluetooth broadcast
+    'ble_title': 'Bluetooth check-in',
+    'ble_idle': 'Let your assistant detect you from a short distance - no need to wait in line.',
+    'ble_active': 'Broadcasting to your assistant',
+    'ble_starting': 'Starting...',
+    'ble_start': 'Broadcast',
+    'ble_again': 'Broadcast again',
+    'ble_stop': 'Stop',
+    'ble_seconds_left': '{s}s left',
+    'ble_need_permission': 'Allow the "Nearby devices" permission so your phone can broadcast.',
+    'ble_open_settings': 'Open settings',
+    'ble_off': 'Bluetooth is off. Turn it on, then try again.',
+    'ble_unsupported': "This phone can't broadcast over Bluetooth. Show the QR code instead.",
+    'ble_error': "Couldn't start the broadcast. Try again.",
+
     // attendance
     'attendance_title': 'My Attendance',
     'present': 'Present',
@@ -138,6 +153,20 @@ const Map<String, Map<String, String>> appStrings = {
     'no_student_number_note': 'حسابك ليس له رقم طالب. تواصل مع المساعد.',
     'id_copied': 'تم نسخ رقم الطالب',
     'copy': 'نسخ',
+
+    'ble_title': 'تسجيل الحضور بالبلوتوث',
+    'ble_idle': 'اجعل المساعد يكتشفك من مسافة قريبة - بدون انتظار في الصف.',
+    'ble_active': 'يتم الإرسال إلى المساعد',
+    'ble_starting': 'جارٍ البدء...',
+    'ble_start': 'ابدأ الإرسال',
+    'ble_again': 'إرسال مرة أخرى',
+    'ble_stop': 'إيقاف',
+    'ble_seconds_left': 'متبقي {s} ث',
+    'ble_need_permission': 'اسمح بإذن "الأجهزة القريبة" ليتمكن هاتفك من الإرسال.',
+    'ble_open_settings': 'فتح الإعدادات',
+    'ble_off': 'البلوتوث مغلق. شغّله ثم حاول مرة أخرى.',
+    'ble_unsupported': 'هذا الهاتف لا يدعم الإرسال عبر البلوتوث. اعرض رمز QR بدلاً من ذلك.',
+    'ble_error': 'تعذر بدء الإرسال. حاول مرة أخرى.',
 
     'attendance_title': 'حضوري',
     'present': 'حاضر',
