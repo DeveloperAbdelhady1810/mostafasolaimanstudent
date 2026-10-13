@@ -128,6 +128,45 @@ void main() {
     b.dispose();
   });
 
+  test('the reply listener is started BEFORE the first packet goes on air, and stopped with the broadcast', () async {
+    final auth = await _signedIn();
+    final adv = FakeAdvertiser();
+    final events = <String>[];
+    final b = make(auth, adv)
+      ..onBeforeStart = () async {
+        events.add('listen(startedBefore=${adv.started.length})');
+      }
+      ..onStopped = () {
+        events.add('stopped');
+      };
+
+    await b.start(userInitiated: true);
+    expect(events, ['listen(startedBefore=0)']);
+
+    await b.stop();
+    expect(events, ['listen(startedBefore=0)', 'stopped']);
+    b.dispose();
+  });
+
+  test('a broadcast that fails to start also releases the reply listener', () async {
+    final auth = await _signedIn();
+    final adv = FakeAdvertiser()..bluetoothOn = false;
+    final events = <String>[];
+    final b = make(auth, adv)
+      ..onBeforeStart = () async {
+        events.add('listen');
+      }
+      ..onStopped = () {
+        events.add('stopped');
+      };
+
+    await b.start();
+
+    expect(b.status, BroadcastStatus.bluetoothOff);
+    expect(events, ['listen', 'stopped']);
+    b.dispose();
+  });
+
   test('stop() takes the packet off the air', () async {
     final auth = await _signedIn();
     final adv = FakeAdvertiser();

@@ -46,6 +46,13 @@ class BroadcastProvider extends ChangeNotifier {
   /// A broadcast has already run in this app session (the button then reads "Broadcast again").
   bool hasBroadcastBefore = false;
 
+  /// Runs just before the first packet goes on air (the reply listener starts here, so an instant
+  /// reply from the assistant cannot arrive before this phone is listening).
+  Future<void> Function()? onBeforeStart;
+
+  /// Runs whenever broadcasting ends or fails to start.
+  void Function()? onStopped;
+
   /// While true, no automatic start happens (used so the Bluetooth permission prompt does not stack on
   /// top of the notification prompt right after the first login, which makes Android drop one of them).
   bool holdAutoStart = false;
@@ -124,6 +131,10 @@ class BroadcastProvider extends ChangeNotifier {
         }
       }
 
+      try {
+        await onBeforeStart?.call();
+      } catch (_) {}
+
       var result = await _advertiseCurrent();
       if (result == AdvertiseResult.bluetoothOff && userInitiated && await _adv.enableBluetooth()) {
         result = await _advertiseCurrent();
@@ -131,6 +142,7 @@ class BroadcastProvider extends ChangeNotifier {
 
       if (result != AdvertiseResult.ok) {
         status = _statusFor(result);
+        onStopped?.call();
         return;
       }
 
@@ -151,6 +163,7 @@ class BroadcastProvider extends ChangeNotifier {
     secondsLeft = 0;
     status = BroadcastStatus.idle;
     notifyListeners();
+    onStopped?.call();
     await _adv.stop();
   }
 
@@ -172,6 +185,7 @@ class BroadcastProvider extends ChangeNotifier {
         _timer?.cancel();
         status = _statusFor(result);
         secondsLeft = 0;
+        onStopped?.call();
       }
     }
     notifyListeners();

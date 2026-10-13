@@ -33,8 +33,8 @@ class PushService extends ChangeNotifier {
   bool _registered = false;
   final List<StreamSubscription> _subs = [];
 
-  /// A push arrived while the app is open (refresh the lists).
-  VoidCallback? onMessage;
+  /// A push arrived while the app is open (refresh the lists). Gets the message's data payload.
+  void Function(Map<String, dynamic> data)? onMessage;
 
   /// The student tapped a notification (jump to the notifications tab).
   VoidCallback? onOpen;
@@ -134,9 +134,11 @@ class PushService extends ChangeNotifier {
   }
 
   Future<void> _onForeground(RemoteMessage m) async {
-    onMessage?.call();
+    onMessage?.call(Map<String, dynamic>.from(m.data));
     // iOS shows its own banner while the app is open; Android needs one drawn here.
     if (defaultTargetPlatform != TargetPlatform.android) return;
+    // "Attendance recorded" is shown by the in-app banner + tick instead of a duplicate system banner.
+    if (m.data['type'] == 'attendance_confirmed') return;
     final n = m.notification;
     if (n == null) return;
     await _local.show(

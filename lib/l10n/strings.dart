@@ -67,6 +67,8 @@ const Map<String, Map<String, String>> appStrings = {
     'ble_off': 'Bluetooth is off. Turn it on, then try again.',
     'ble_unsupported': "This phone can't broadcast over Bluetooth. Show the QR code instead.",
     'ble_error': "Couldn't start the broadcast. Try again.",
+    'ack_heard': 'Assistant scanned you successfully',
+    'ack_recorded': 'Your attendance was recorded',
 
     // attendance
     'attendance_title': 'My Attendance',
@@ -167,6 +169,8 @@ const Map<String, Map<String, String>> appStrings = {
     'ble_off': 'البلوتوث مغلق. شغّله ثم حاول مرة أخرى.',
     'ble_unsupported': 'هذا الهاتف لا يدعم الإرسال عبر البلوتوث. اعرض رمز QR بدلاً من ذلك.',
     'ble_error': 'تعذر بدء الإرسال. حاول مرة أخرى.',
+    'ack_heard': 'المساعد رصدك بنجاح',
+    'ack_recorded': 'تم تسجيل حضورك',
 
     'attendance_title': 'حضوري',
     'present': 'حاضر',

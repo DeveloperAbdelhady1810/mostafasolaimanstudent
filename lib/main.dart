@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 import 'l10n/strings.dart';
+import 'providers/ack_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/broadcast_provider.dart';
 import 'providers/code_provider.dart';
@@ -20,6 +21,8 @@ import 'screens/home_shell.dart';
 import 'services/api_client.dart';
 import 'services/ble_advertiser.dart';
 import 'services/push_service.dart';
+import 'services/reply_scanner.dart';
+import 'services/tick_player.dart';
 import 'services/secure_store.dart';
 import 'theme.dart';
 
@@ -50,6 +53,8 @@ class StudentApp extends StatefulWidget {
     this.store,
     this.connectivity,
     this.advertiser,
+    this.replyScanner,
+    this.tickPlayer,
   });
 
   final LocaleProvider locale;
@@ -60,6 +65,8 @@ class StudentApp extends StatefulWidget {
   final SecureStore? store;
   final Stream<List<ConnectivityResult>>? connectivity;
   final BleAdvertiser? advertiser;
+  final ReplyScanner? replyScanner;
+  final TickPlayer? tickPlayer;
 
   @override
   State<StudentApp> createState() => _StudentAppState();
@@ -73,6 +80,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   late final PushService push;
   late final CodeProvider code;
   late final BroadcastProvider broadcast;
+  late final AckProvider ack;
   final nav = NavProvider();
 
   @override
@@ -85,6 +93,11 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     push = PushService(api);
     code = CodeProvider(auth);
     broadcast = BroadcastProvider(auth, advertiser: widget.advertiser);
+    ack = AckProvider(auth, scanner: widget.replyScanner, player: widget.tickPlayer);
+    // Listen for the assistant's Bluetooth reply exactly while this phone is broadcasting (listening
+    // starts BEFORE the first packet is sent, so an immediate reply is never missed).
+    broadcast.onBeforeStart = () => ack.setListening(true);
+    broadcast.onStopped = () => unawaited(ack.setListening(false));
 
     auth.onSignedIn = _onSignedIn;
     auth.onBeforeSignOut = () async {
@@ -98,10 +111,11 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
       unawaited(data.syncAll());
       unawaited(push.register());
     };
-    push.onMessage = () {
+    push.onMessage = (message) {
       if (!auth.isLoggedIn) return;
       unawaited(data.refreshNotifications());
       unawaited(data.refreshAttendance());
+      if (message['type'] == 'attendance_confirmed') unawaited(ack.recorded());
     };
     push.onOpen = () {
       nav.go(NavProvider.notifications);
@@ -158,6 +172,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    ack.dispose();
     broadcast.dispose();
     code.dispose();
     data.dispose();
@@ -177,6 +192,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<PushService>.value(value: push),
         ChangeNotifierProvider<CodeProvider>.value(value: code),
         ChangeNotifierProvider<BroadcastProvider>.value(value: broadcast),
+        ChangeNotifierProvider<AckProvider>.value(value: ack),
         ChangeNotifierProvider<NavProvider>.value(value: nav),
       ],
       child: Consumer<LocaleProvider>(

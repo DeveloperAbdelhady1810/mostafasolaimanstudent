@@ -49,6 +49,8 @@ dependencies:
   shared_preferences: ^2.5.5
   connectivity_plus: 6.1.5
   flutter_ble_peripheral: ^3.1.0
+  audioplayers: ^6.7.1
+  flutter_blue_plus: ^2.3.14
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +77,7 @@ flutter:
 
   assets:
     - assets/logo.png
+    - assets/sounds/tick.wav
 
 flutter_launcher_icons:
   android: true

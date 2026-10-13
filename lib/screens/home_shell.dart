@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/ack_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/data_provider.dart';
 import '../providers/nav_provider.dart';
@@ -48,13 +49,18 @@ class HomeShell extends StatelessWidget {
     final unread = context.select<DataProvider, int>((d) => d.unread);
 
     return Scaffold(
-      body: IndexedStack(
-        index: nav.index,
-        children: const [
-          HomeScreen(),
-          AttendanceScreen(),
-          NotificationsScreen(),
-          SettingsScreen(),
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: nav.index,
+            children: const [
+              HomeScreen(),
+              AttendanceScreen(),
+              NotificationsScreen(),
+              SettingsScreen(),
+            ],
+          ),
+          const _AckBanner(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -93,6 +99,59 @@ class HomeShell extends StatelessWidget {
             label: context.tr('nav_settings'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Assistant scanned you successfully" - slides in over any tab when the assistant's phone heard this
+/// phone over Bluetooth (works offline) or the server recorded the attendance.
+class _AckBanner extends StatelessWidget {
+  const _AckBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final kind = context.watch<AckProvider>().banner;
+    final text = kind == null ? '' : context.tr(kind == AckKind.heard ? 'ack_heard' : 'ack_recorded');
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          transitionBuilder: (child, animation) => SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(animation),
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+          child: kind == null
+              ? const SizedBox.shrink(key: ValueKey('no_ack'))
+              : Padding(
+                  key: ValueKey('ack_$kind'),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: GestureDetector(
+                    onTap: context.read<AckProvider>().dismiss,
+                    child: Material(
+                      key: const Key('ack_banner'),
+                      elevation: 8,
+                      color: Brand.primary,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(children: [
+                          const Icon(Icons.verified_rounded, color: Colors.white, size: 26),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(text,
+                                style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w800)),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+        ),
       ),
     );
   }
