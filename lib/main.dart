@@ -144,6 +144,8 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     if (now.difference(_lastResumeSync).inSeconds < 20) return;
     _lastResumeSync = now;
     unawaited(data.syncAll());
+    // The rotating code appears as soon as the server switches it on, without restarting the app.
+    if (!auth.hasSecureCode) unawaited(auth.refreshSecret());
   }
 
   Future<void> _boot() async {
