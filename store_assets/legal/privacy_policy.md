@@ -1,3 +1,5 @@
+> **Superseded 2026-10-15:** the live, final versions are on the website (`https://mostafa-solaiman.online/privacy`, `/delete-account`, `/support`). Account deletion is implemented as a *disable* (nothing is erased); this draft is kept for reference only.
+
 # Privacy Policy - Mostafa Solaiman student app  /  سياسة الخصوصية - تطبيق مصطفى سليمان
 
 > DRAFT for the owner to review (ideally with a lawyer) and publish at a public URL such as

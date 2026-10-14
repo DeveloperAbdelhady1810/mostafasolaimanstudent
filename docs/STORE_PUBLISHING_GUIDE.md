@@ -18,14 +18,14 @@ These are not optional; each one is a common rejection reason.
 
 | # | Blocker | Status | What to do |
 |---|---|---|---|
-| 1 | **Privacy policy URL** (both stores) | Missing. `https://mostafa-solaiman.online/privacy` returns 404 (only `/terms` exists) | Publish `store_assets/legal/privacy_policy.md` after filling the [BRACKETS] |
-| 2 | **Account deletion** - Apple 5.1.1(v) and Google Play both require it for any app that lets people create an account (ours does: sign-up through Google/Apple) | Missing in the app and on the site | Add Settings > Delete account in the app **and** a public web page (`/delete-account`, draft in `store_assets/legal/`). Google also wants that URL in the Data safety form |
-| 3 | **Support URL** (Apple requires real contact information) | Missing (`/support`, `/contact` are 404) | A page with an email / WhatsApp, or reuse the privacy page's contact section |
-| 4 | **Demo account for the reviewers** (Apple "Review sign-in", Google "App access") | Not created | Create a normal student account on the website with a password that never expires, e.g. `appreview@mostafa-solaiman.online`, and keep it free of real student data |
-| 5 | **Android release signing key** | The release build is still signed with the debug key | Section 5.1 (done in code; you create the key) |
-| 6 | **Target age / children** | Registration allows ages 10-30 | Decide: Google treats a target group that includes under-13s as "Families" (extra rules). Simplest honest choice is target age **13+** and say so in the policy; get a lawyer's view because students are minors and a parent's phone number is collected |
+| 1 | **Privacy policy URL** (both stores) | **Done** - live at `https://mostafa-solaiman.online/privacy` (English + Arabic, last updated 15 Oct 2026) | Paste the URL in both consoles. Re-read the text once; it states what the app really collects |
+| 2 | **Account deletion** (Apple 5.1.1(v), Google Play) | **Done, as a disable (nothing is erased)** - in-app Settings > Delete account, and the public page `https://mostafa-solaiman.online/delete-account` (email + password, or email support) | Use that URL in Google's Data safety form. **Apple risk:** Apple's review guidance has said that only *temporarily deactivating* an account does not satisfy 5.1.1(v). If Apple rejects it, the fix is a server change only (erase the personal details instead of disabling); the policy already tells users they can ask for permanent erasure by email |
+| 3 | **Support URL** | **Done** - `https://mostafa-solaiman.online/support` | Use it as the Support URL (Apple) and website (Google) |
+| 4 | **Demo account for the reviewers** | **Done** - a real student `appreview@mostafa-solaiman.online` (student number 10592, online mode, no center) | The password was given to the owner in chat only (never in git). Put it in Apple "Review sign-in" and Google "App access". Do not delete this account from the app |
+| 5 | **Android release signing key** | **Done** - upload keystore created on the owner's PC (`C:\Users\AhmedAbdElHady\mostafa-solaiman-upload.jks`, alias `upload`, valid to 2054); `android/key.properties` is git-ignored; signed `.aab` built | **Back up the `.jks` and its password now** (losing it blocks future updates unless Play App Signing resets the upload key). Add its SHA-1 to Firebase |
+| 6 | **Target age / children** | **Still open - needs the owner (and ideally a lawyer)**. Registration allows ages 10-30 | Google treats a target group that includes under-13s as "Families" (extra rules). Simplest honest choice is target age **13+**; students are minors and a parent's phone number is collected |
 
-The account-deletion pieces (1-3) are code and site work, not paperwork. Ask and they can be built and tested.
+Still not something code can fix: the Google Play **12 testers x 14 days** rule for new personal accounts, the `[BRACKETS]` legal details (company name, registration number, address) - the live `/terms` page also still contains such placeholders - and the Firebase/Google sign-in console setup (section 5).
 
 ---
 

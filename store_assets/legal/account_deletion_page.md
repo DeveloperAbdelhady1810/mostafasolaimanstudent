@@ -1,3 +1,5 @@
+> **Superseded 2026-10-15:** the live, final versions are on the website (`https://mostafa-solaiman.online/privacy`, `/delete-account`, `/support`). Account deletion is implemented as a *disable* (nothing is erased); this draft is kept for reference only.
+
 # Account deletion page (public URL) - DRAFT
 
 Both stores require a public web page where a person can request deletion of their account and data, and Google asks for
