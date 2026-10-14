@@ -234,6 +234,33 @@ void main() {
     await _teardown(tester);
   });
 
+  testWidgets('the rotating code appears after the server switches it on, when the app returns to the foreground', (tester) async {
+    FlutterSecureStorage.setMockInitialValues(_signedInStore(withSecret: false));
+    var enabled = false;
+    final client = MockClient((req) async {
+      if (req.url.path.endsWith('/student/ble/secret')) {
+        return enabled
+            ? _json({'student_no': 10001, 'secret': base64Encode(_secretBytes), 'server_time': 1791900000, 'window_seconds': 30, 'version': 1})
+            : _json({'message': 'Bluetooth attendance is not enabled yet.'}, 403);
+      }
+      return _json({'records': []});
+    });
+
+    await _boot(tester, client: client);
+    expect(find.text('ID code'), findsOneWidget, reason: 'switch is off: plain ID code');
+    expect(find.text('Secure code'), findsNothing);
+
+    enabled = true; // the owner flips the switch on the server
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 21)); // past the resume throttle
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _pump(tester, 15);
+
+    expect(find.text('Secure code'), findsOneWidget);
+    expect(find.text('ID code'), findsNothing);
+    await _teardown(tester);
+  });
+
   test('CodeProvider produces the rotating payload from the stored secret, offline', () async {
     FlutterSecureStorage.setMockInitialValues(_signedInStore());
     final api = ApiClient(client: MockClient((req) async => throw const SocketException('x')));

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import '../models.dart';
 import '../services/api_client.dart';
 import '../services/secure_store.dart';
+import '../services/social_auth_service.dart';
+import '../social_models.dart';
 
 enum AuthStatus { loading, loggedOut, loggedIn }
 
@@ -15,13 +17,18 @@ enum AuthStatus { loading, loggedOut, loggedIn }
 /// from the encrypted store with NO network call, so the student ID and the
 /// code keep working in a basement classroom with no signal.
 class AuthProvider extends ChangeNotifier {
-  AuthProvider(this.api, this.store) {
+  AuthProvider(this.api, this.store, {SocialAuth? social}) : social = social ?? PlatformSocialAuth() {
     api.onServerClock = _onServerClock;
     api.onUnauthorized = _onUnauthorized;
   }
 
   final ApiClient api;
   final SecureStore store;
+
+  /// The phone's native Google / Apple sign-in.
+  final SocialAuth social;
+
+  SocialConfig? _socialConfig;
 
   AuthStatus status = AuthStatus.loading;
   StudentUser? user;
@@ -84,8 +91,11 @@ class AuthProvider extends ChangeNotifier {
   /// Throws [ApiException] on failure (status 0 = no internet).
   Future<void> login(String login, String password) async {
     final res = await api.post('/auth/student-login', {'login': login.trim(), 'password': password});
-    final map = Map<String, dynamic>.from(res as Map);
+    await _finishLogin(Map<String, dynamic>.from(res as Map));
+  }
 
+  /// Stores a session the server just issued ({token, user, server_time}) and opens the app.
+  Future<void> _finishLogin(Map<String, dynamic> map) async {
     final token = map['token'].toString();
     final u = StudentUser.fromJson(Map<String, dynamic>.from(map['user'] as Map));
 
@@ -107,6 +117,68 @@ class AuthProvider extends ChangeNotifier {
     status = AuthStatus.loggedIn;
     notifyListeners();
     onSignedIn?.call(true);
+  }
+
+  // ───────────────────────── Google / Apple sign-in ──────────────────────────
+
+  /// What the server allows (which buttons to show, and the Google client id). Public; cached after the first success.
+  Future<SocialConfig> socialConfig() async {
+    final cached = _socialConfig;
+    if (cached != null) return cached;
+    final res = await api.get('/auth/social/config');
+    return _socialConfig = SocialConfig.fromJson(Map<String, dynamic>.from(res as Map));
+  }
+
+  bool get appleAvailable => social.appleAvailable;
+
+  /// Opens the provider's own sign-in, then asks the server to verify it.
+  /// Returns null when the student is signed in, or a [SocialPending] when the email has no student
+  /// account yet and the profile form must be filled in ([completeProfile]).
+  ///
+  /// Throws [SocialAuthException] (cancelled / unavailable / failed) or [ApiException].
+  Future<SocialPending?> socialLogin(SocialProvider provider) async {
+    final SocialIdentity identity;
+    if (provider == SocialProvider.google) {
+      final config = await socialConfig();
+      final clientId = config.googleServerClientId;
+      if (!config.googleEnabled || clientId == null || clientId.isEmpty) {
+        throw const SocialAuthException(SocialFailure.unavailable, 'google is not set up on the server');
+      }
+      identity = await social.google(serverClientId: clientId);
+    } else {
+      identity = await social.apple();
+    }
+
+    final res = provider == SocialProvider.google
+        ? await api.post('/auth/social/google', {'id_token': identity.token})
+        : await api.post('/auth/social/apple', {
+            'identity_token': identity.token,
+            'nonce': identity.nonce,
+            if (identity.name != null) 'name': identity.name,
+          });
+    final map = Map<String, dynamic>.from(res as Map);
+
+    if (map['needs_profile'] == true) {
+      return SocialPending(
+        ticket: map['ticket'].toString(),
+        email: (map['email'] ?? '').toString(),
+        name: (map['name'] ?? '').toString(),
+      );
+    }
+    await _finishLogin(map);
+    return null;
+  }
+
+  Future<RegistrationOptions> registrationOptions() async {
+    final res = await api.get('/auth/social/options');
+    return RegistrationOptions.fromJson(Map<String, dynamic>.from(res as Map));
+  }
+
+  /// Creates the student account (the same fields the website asks) and signs in.
+  /// A 422 [ApiException] carries [ApiException.fieldErrors]; a 410 means the sign-in expired.
+  Future<void> completeProfile(String ticket, Map<String, dynamic> fields) async {
+    final res = await api.post('/auth/social/complete', {'ticket': ticket, ...fields});
+    await _finishLogin(Map<String, dynamic>.from(res as Map));
   }
 
   // ───────────────────────────── the secret ──────────────────────────────

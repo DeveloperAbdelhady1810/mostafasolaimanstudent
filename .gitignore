@@ -56,3 +56,9 @@ key.properties
 
 # Real Firebase keys stay local; lib/firebase_options.dart.example is the committed template
 lib/firebase_options.dart
+
+# Local iOS secrets (Google client ids) - copy ios/Flutter/Secrets.xcconfig.example
+ios/Flutter/Secrets.xcconfig
+
+# Local preview entry points (never shipped)
+/tool/
