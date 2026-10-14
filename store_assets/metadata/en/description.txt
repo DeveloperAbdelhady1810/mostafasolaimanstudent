@@ -1,0 +1,28 @@
+Mostafa Solaiman is the student app for Mr. Mostafa Solaiman's maths classes.
+
+YOUR ID, ALWAYS WITH YOU
+- Your student number and a QR code that renews itself every 30 seconds
+- Both are saved on your phone, so they work even with no internet
+- Show the code to your assistant when you arrive at the center
+
+CHECK IN WITHOUT WAITING (BLUETOOTH)
+- Open the app and tap Broadcast: your assistant's phone detects you from a short distance
+- The moment you are counted you hear a chime and see "Assistant scanned you successfully" - also offline
+
+KNOW YOUR ATTENDANCE
+- Every class with its date, center and status (present or absent)
+- Your attendance rate at a glance
+- An instant notification when your attendance is recorded, plus messages from your teacher
+
+SIGN IN YOUR WAY
+- Email or phone number with your password, or continue with Google or Apple
+- New student? Finish a short form and your account is ready
+
+BUILT FOR YOU
+- Full English and Arabic support (right-to-left)
+- Fast and simple, and your information is kept private
+
+GOOD TO KNOW
+- You need an account on Mr. Mostafa Solaiman's platform (mostafa-solaiman.online); you can create one in the app or on the website
+- Bluetooth check-in needs Bluetooth switched on and the "Nearby devices" permission, and works when your center has it enabled
+- Signing in needs internet once; after that your ID and code work offline
