@@ -254,6 +254,14 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Store-required "delete account". The server disables the account (nothing is erased) and ends every
+  /// sign-in; on success this phone is signed out locally. Throws [ApiException] on failure (e.g. offline).
+  Future<void> deleteAccount() async {
+    await api.post('/student/account/delete');
+    api.token = null; // already revoked server-side: skip the remote logout call
+    await logout();
+  }
+
   // ─────────────────────────── clock handling ────────────────────────────
 
   void _onUnauthorized() {

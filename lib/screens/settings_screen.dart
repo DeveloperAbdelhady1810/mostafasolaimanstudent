@@ -29,6 +29,34 @@ class SettingsScreen extends StatelessWidget {
     if (ok == true && context.mounted) await context.read<AuthProvider>().logout();
   }
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = context.trRead('delete_account_failed');
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ctx.trRead('delete_account')),
+        content: Text(ctx.trRead('delete_account_confirm')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ctx.trRead('cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(ctx.trRead('delete_account_action'), style: const TextStyle(color: Brand.danger, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await auth.deleteAccount();
+    } catch (_) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(failed), behavior: SnackBarBehavior.floating));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -131,6 +159,13 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined, color: Brand.primary),
+                title: Text(context.tr('privacy_policy'), style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+                onTap: () => launchUrl(Uri.parse('$siteUrl/privacy'), mode: LaunchMode.externalApplication),
+              ),
+              const Divider(),
+              ListTile(
                 leading: const Icon(Icons.info_outline_rounded, color: Brand.primary),
                 title: Text(context.tr('version'), style: const TextStyle(fontWeight: FontWeight.w700)),
                 trailing: Text(appVersionLabel, style: const TextStyle(color: Brand.muted)),
@@ -150,6 +185,12 @@ class SettingsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               textStyle: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
             ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => _confirmDelete(context),
+            style: TextButton.styleFrom(foregroundColor: Brand.danger, minimumSize: const Size.fromHeight(44)),
+            child: Text(context.tr('delete_account')),
           ),
         ],
       ),
