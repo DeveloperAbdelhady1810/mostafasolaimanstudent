@@ -31,6 +31,9 @@ class PushService extends ChangeNotifier {
 
   String? _token;
   bool _registered = false;
+
+  /// This phone's token is saved on the server for the signed-in account (only then do pushes arrive).
+  bool get registered => _registered;
   final List<StreamSubscription> _subs = [];
 
   /// A push arrived while the app is open (refresh the lists). Gets the message's data payload.
@@ -118,6 +121,7 @@ class PushService extends ChangeNotifier {
         'app': 'student',
       });
       _registered = true;
+      notifyListeners();
     } catch (_) {}
   }
 

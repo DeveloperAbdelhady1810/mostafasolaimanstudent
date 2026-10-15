@@ -149,6 +149,8 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
       return;
     }
     if (state != AppLifecycleState.resumed || !auth.isLoggedIn) return;
+    // A phone whose token never reached the server (offline at sign-in, slow APNs...) gets no pushes: retry.
+    if (push.permitted) unawaited(push.register());
     broadcast.onForeground();
     final now = DateTime.now();
     if (now.difference(_lastResumeSync).inSeconds < 20) return;

@@ -70,7 +70,7 @@ class SettingsScreen extends StatelessWidget {
     final pushSubtitle = !push.available
         ? context.tr('push_unavailable')
         : push.permitted
-            ? context.tr('push_on')
+            ? context.tr(push.registered ? 'push_on' : 'push_retry')
             : context.tr('push_off');
 
     return Scaffold(
@@ -149,8 +149,8 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.notifications_active_outlined, color: Brand.primary),
                 title: Text(context.tr('push_title'), style: const TextStyle(fontWeight: FontWeight.w700)),
                 subtitle: Text(pushSubtitle),
-                trailing: push.available && !push.permitted ? const Icon(Icons.chevron_right_rounded) : null,
-                onTap: push.available && !push.permitted ? () => context.read<PushService>().enable() : null,
+                trailing: push.available && !(push.permitted && push.registered) ? const Icon(Icons.chevron_right_rounded) : null,
+                onTap: push.available && !(push.permitted && push.registered) ? () => context.read<PushService>().enable() : null,
               ),
               const Divider(),
               ListTile(
