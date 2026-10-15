@@ -11,6 +11,7 @@ import 'attendance_screen.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'notifications_screen.dart';
+import 'parent_screens.dart';
 import 'settings_screen.dart';
 
 /// Shows the splash, the login page or the app depending on the stored session.
@@ -25,6 +26,8 @@ class AuthGate extends StatelessWidget {
       case AuthStatus.loggedOut:
         return const LoginScreen();
       case AuthStatus.loggedIn:
+        final auth = context.watch<AuthProvider>();
+        if (auth.isParent) return auth.mustChangePassword ? const ParentPasswordScreen() : const ParentShell();
         return const HomeShell();
     }
   }

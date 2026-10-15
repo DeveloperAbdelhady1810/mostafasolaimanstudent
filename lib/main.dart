@@ -17,6 +17,7 @@ import 'providers/code_provider.dart';
 import 'providers/data_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/nav_provider.dart';
+import 'providers/parent_provider.dart';
 import 'screens/home_shell.dart';
 import 'services/api_client.dart';
 import 'services/ble_advertiser.dart';
@@ -80,6 +81,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   late final SecureStore store;
   late final AuthProvider auth;
   late final DataProvider data;
+  late final ParentProvider parent;
   late final PushService push;
   late final CodeProvider code;
   late final BroadcastProvider broadcast;
@@ -93,6 +95,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     store = widget.store ?? SecureStore();
     auth = AuthProvider(api, store, social: widget.social);
     data = DataProvider(api, store, connectivity: widget.connectivity);
+    parent = ParentProvider(api, store);
     push = PushService(api);
     code = CodeProvider(auth);
     broadcast = BroadcastProvider(auth, advertiser: widget.advertiser);
@@ -106,22 +109,29 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     auth.onBeforeSignOut = () async {
       await push.unregister();
       data.reset();
+      data.parentMode = false;
+      parent.reset();
       nav.go(NavProvider.home);
     };
     data.onBackOnline = () {
       if (!auth.isLoggedIn) return;
       unawaited(auth.refreshSecret());
       unawaited(data.syncAll());
+      if (auth.isParent) unawaited(parent.refreshChildren());
       unawaited(push.register());
     };
     push.onMessage = (message) {
       if (!auth.isLoggedIn) return;
       unawaited(data.refreshNotifications());
+      if (auth.isParent) {
+        unawaited(parent.refreshChildren());
+        return;
+      }
       unawaited(data.refreshAttendance());
       if (message['type'] == 'attendance_confirmed') unawaited(ack.recorded());
     };
     push.onOpen = () {
-      nav.go(NavProvider.notifications);
+      nav.go(auth.isParent ? NavProvider.parentNotifications : NavProvider.notifications);
       if (auth.isLoggedIn) unawaited(data.refreshNotifications());
     };
 
@@ -144,6 +154,10 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     if (now.difference(_lastResumeSync).inSeconds < 20) return;
     _lastResumeSync = now;
     unawaited(data.syncAll());
+    if (auth.isParent) {
+      unawaited(parent.refreshChildren());
+      return;
+    }
     // The rotating code appears as soon as the server switches it on, without restarting the app.
     if (!auth.hasSecureCode) unawaited(auth.refreshSecret());
   }
@@ -156,8 +170,14 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
   }
 
   Future<void> _onSignedIn(bool fresh) async {
+    data.parentMode = auth.isParent;
     await data.loadCache(); // shows the last known lists instantly, even offline
-    unawaited(auth.refreshSecret());
+    if (auth.isParent) {
+      await parent.loadCache();
+      unawaited(parent.refreshChildren());
+    } else {
+      unawaited(auth.refreshSecret());
+    }
     unawaited(data.syncAll());
     if (push.permitted) {
       unawaited(push.register());
@@ -181,6 +201,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
     broadcast.dispose();
     code.dispose();
     data.dispose();
+    parent.dispose();
     push.dispose();
     auth.dispose();
     nav.dispose();
@@ -194,6 +215,7 @@ class _StudentAppState extends State<StudentApp> with WidgetsBindingObserver {
         ChangeNotifierProvider<LocaleProvider>.value(value: widget.locale),
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider<DataProvider>.value(value: data),
+        ChangeNotifierProvider<ParentProvider>.value(value: parent),
         ChangeNotifierProvider<PushService>.value(value: push),
         ChangeNotifierProvider<CodeProvider>.value(value: code),
         ChangeNotifierProvider<BroadcastProvider>.value(value: broadcast),

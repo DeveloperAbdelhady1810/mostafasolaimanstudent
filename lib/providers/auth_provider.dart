@@ -50,6 +50,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> Function()? onBeforeSignOut;
 
   bool get isLoggedIn => status == AuthStatus.loggedIn;
+  bool get isParent => user?.isParent ?? false;
+  bool get mustChangePassword => user?.mustChangePassword ?? false;
   int? get studentNumber => user?.studentNumber;
   bool get hasSecureCode => secret != null && studentNumber != null;
 
@@ -186,7 +188,7 @@ class AuthProvider extends ChangeNotifier {
   /// Fetches (or re-fetches) the rotating-code secret. Silent on any failure:
   /// offline keeps the stored one, "not enabled yet" (403) falls back to the plain ID code.
   Future<void> refreshSecret() async {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || isParent) return;
     try {
       final res = Map<String, dynamic>.from(await api.post('/student/ble/secret') as Map);
       final b64 = res['secret'].toString();
@@ -198,14 +200,7 @@ class AuthProvider extends ChangeNotifier {
 
       final no = (res['student_no'] as num?)?.toInt();
       if (no != null && no != user?.studentNumber && user != null) {
-        user = StudentUser(
-          id: user!.id,
-          name: user!.name,
-          email: user!.email,
-          phone: user!.phone,
-          studentNumber: no,
-          avatar: user!.avatar,
-        );
+        user = user!.copyWith(studentNumber: no);
         await store.writeJson(SecureStore.kUser, user!.toJson());
       }
       if (res['server_time'] is num) _applyServerTime((res['server_time'] as num).toInt());
@@ -257,9 +252,22 @@ class AuthProvider extends ChangeNotifier {
   /// Store-required "delete account". The server disables the account (nothing is erased) and ends every
   /// sign-in; on success this phone is signed out locally. Throws [ApiException] on failure (e.g. offline).
   Future<void> deleteAccount() async {
-    await api.post('/student/account/delete');
+    await api.post(isParent ? '/parent/account/delete' : '/student/account/delete');
     api.token = null; // already revoked server-side: skip the remote logout call
     await logout();
+  }
+
+  /// A parent chooses their own password (forced after the first sign-in with the one the school set).
+  /// Throws [ApiException]; a 422 carries [ApiException.fieldErrors].
+  Future<void> changeParentPassword(String current, String password, String confirmation) async {
+    await api.post('/parent/change-password', {
+      'current_password': current,
+      'password': password,
+      'password_confirmation': confirmation,
+    });
+    user = user!.copyWith(mustChangePassword: false);
+    await store.writeJson(SecureStore.kUser, user!.toJson());
+    notifyListeners();
   }
 
   // ─────────────────────────── clock handling ────────────────────────────

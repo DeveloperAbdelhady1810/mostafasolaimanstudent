@@ -7,6 +7,11 @@ class NavProvider extends ChangeNotifier {
   static const notifications = 2;
   static const settings = 3;
 
+  // A parent's shell has three tabs.
+  static const parentChildren = 0;
+  static const parentNotifications = 1;
+  static const parentSettings = 2;
+
   int index = home;
 
   void go(int i) {

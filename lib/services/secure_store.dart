@@ -17,6 +17,7 @@ class SecureStore {
   static const kAttendance = 'cache_attendance';
   static const kNotifications = 'cache_notifications';
   static const kAttendanceAt = 'cache_attendance_at';
+  static const kChildren = 'cache_children';
 
   Future<String?> read(String key) async {
     try {

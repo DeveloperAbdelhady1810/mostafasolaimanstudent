@@ -172,6 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Brand.text)),
                       const SizedBox(height: 4),
                       Text(context.tr('login_subtitle'), style: const TextStyle(fontSize: 14, color: Brand.muted)),
+                      const SizedBox(height: 2),
+                      Text(context.tr('login_parent_hint'), style: const TextStyle(fontSize: 12.5, color: Brand.muted)),
                       const SizedBox(height: 20),
                       if (expired) ...[
                         OfflineBanner(text: context.tr('session_expired')),

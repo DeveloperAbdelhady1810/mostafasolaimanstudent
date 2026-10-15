@@ -63,6 +63,9 @@ class SettingsScreen extends StatelessWidget {
     final push = context.watch<PushService>();
     final lp = context.watch<LocaleProvider>();
     final user = auth.user;
+    // Parent accounts created by the school carry a placeholder address that is not a real mailbox.
+    final email = user?.email ?? '';
+    final showEmail = email.isNotEmpty && !email.endsWith('.temp');
 
     final pushSubtitle = !push.available
         ? context.tr('push_unavailable')
@@ -108,9 +111,8 @@ class SettingsScreen extends StatelessWidget {
           SoftCard(
             padding: EdgeInsets.zero,
             child: Column(children: [
-              if ((user?.email ?? '').isNotEmpty)
-                _InfoTile(icon: Icons.mail_outline_rounded, label: context.tr('email'), value: user!.email!),
-              if ((user?.email ?? '').isNotEmpty && (user?.phone ?? '').isNotEmpty) const Divider(),
+              if (showEmail) _InfoTile(icon: Icons.mail_outline_rounded, label: context.tr('email'), value: email),
+              if (showEmail && (user?.phone ?? '').isNotEmpty) const Divider(),
               if ((user?.phone ?? '').isNotEmpty)
                 _InfoTile(icon: Icons.phone_outlined, label: context.tr('phone'), value: user!.phone!),
             ]),

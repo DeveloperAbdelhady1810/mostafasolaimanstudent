@@ -25,6 +25,10 @@ class DataProvider extends ChangeNotifier {
   List<AppNotification> notifications = [];
   bool notificationsLoading = false;
 
+  /// A parent has no attendance of their own and their notifications live under /parent.
+  bool parentMode = false;
+  String get _notificationsPath => parentMode ? '/parent/notifications' : '/notifications';
+
   bool _noInterface = false;
   bool _lastCallFailed = false;
 
@@ -92,7 +96,7 @@ class DataProvider extends ChangeNotifier {
   // ───────────────────────────── sync ────────────────────────────────────
 
   Future<void> syncAll() async {
-    await Future.wait([refreshAttendance(), refreshNotifications()]);
+    await Future.wait([if (!parentMode) refreshAttendance(), refreshNotifications()]);
   }
 
   Future<void> refreshAttendance() async {
@@ -120,7 +124,7 @@ class DataProvider extends ChangeNotifier {
     notificationsLoading = true;
     notifyListeners();
     try {
-      final res = await api.get('/notifications');
+      final res = await api.get(_notificationsPath);
       final list = (res is List ? res : (res is Map ? res['data'] : null)) as List? ?? const [];
       notifications = list.whereType<Map>().map((e) => AppNotification.fromJson(Map<String, dynamic>.from(e))).toList();
       _noteResult(failed: false);
@@ -140,7 +144,7 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
     unawaited(store.writeJson(SecureStore.kNotifications, notifications.map((e) => e.toJson()).toList()));
     try {
-      await api.post('/notifications/${n.id}/read');
+      await api.post('$_notificationsPath/${n.id}/read');
     } catch (_) {} // the next successful refresh reconciles
   }
 
@@ -152,7 +156,7 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
     unawaited(store.writeJson(SecureStore.kNotifications, notifications.map((e) => e.toJson()).toList()));
     try {
-      await api.post('/notifications/mark-all-read');
+      await api.post('$_notificationsPath/mark-all-read');
     } catch (_) {}
   }
 
