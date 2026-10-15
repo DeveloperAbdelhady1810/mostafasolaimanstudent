@@ -25,7 +25,7 @@ These are not optional; each one is a common rejection reason.
 | 5 | **Android release signing key** | **Done** - upload keystore created on the owner's PC (`C:\Users\AhmedAbdElHady\mostafa-solaiman-upload.jks`, alias `upload`, valid to 2054); `android/key.properties` is git-ignored; signed `.aab` built | **Back up the `.jks` and its password now** (losing it blocks future updates unless Play App Signing resets the upload key). Add its SHA-1 to Firebase |
 | 6 | **Target age / children** | **Still open - needs the owner (and ideally a lawyer)**. Registration allows ages 10-30 | Google treats a target group that includes under-13s as "Families" (extra rules). Simplest honest choice is target age **13+**; students are minors and a parent's phone number is collected |
 
-Still not something code can fix: the Google Play **12 testers x 14 days** rule for new personal accounts, the `[BRACKETS]` legal details (company name, registration number, address) - the live `/terms` page also still contains such placeholders - and the Firebase/Google sign-in console setup (section 5).
+Still not something code can fix: the Google Play **12 testers x 14 days** rule for new personal accounts, the `[BRACKETS]` legal details (company name, registration number, address) (the live `/terms` page no longer has placeholders: it names Mr. Mostafa Soliman as operator) - and Apple Sign-In setup (section 5).
 
 ---
 
