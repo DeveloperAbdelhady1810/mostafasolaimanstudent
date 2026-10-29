@@ -154,17 +154,10 @@ class SettingsScreen extends StatelessWidget {
               ),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.language_rounded, color: Brand.primary),
-                title: Text(context.tr('open_website'), style: const TextStyle(fontWeight: FontWeight.w700)),
-                trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                onTap: () => launchUrl(Uri.parse(siteUrl), mode: LaunchMode.externalApplication),
-              ),
-              const Divider(),
-              ListTile(
                 leading: const Icon(Icons.privacy_tip_outlined, color: Brand.primary),
                 title: Text(context.tr('privacy_policy'), style: const TextStyle(fontWeight: FontWeight.w700)),
                 trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                onTap: () => launchUrl(Uri.parse('$siteUrl/privacy'), mode: LaunchMode.externalApplication),
+                onTap: () => launchUrl(Uri.parse('$siteUrl/privacy'), mode: LaunchMode.inAppBrowserView),
               ),
               const Divider(),
               ListTile(

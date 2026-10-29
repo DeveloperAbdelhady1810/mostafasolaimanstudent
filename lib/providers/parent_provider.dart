@@ -53,13 +53,9 @@ class ParentProvider extends ChangeNotifier {
   /// Returns true when fresh data arrived (false = offline / error; any older data stays).
   Future<bool> refreshChild(int child) async {
     try {
-      final results = await Future.wait([
-        api.get('/parent/children/$child/attendance'),
-        api.get('/parent/children/$child/courses'),
-      ]);
-      final att = (results[0] is Map ? (results[0] as Map)['records'] : null) as List? ?? const [];
+      final res = await api.get('/parent/children/$child/attendance');
+      final att = (res is Map ? res['records'] : null) as List? ?? const [];
       _attendance[child] = att.whereType<Map>().map((e) => AttendanceRecord.fromJson(Map<String, dynamic>.from(e))).toList();
-      _courses[child] = ChildCourses.fromJson(Map<String, dynamic>.from(results[1] as Map));
       notifyListeners();
       return true;
     } catch (_) {

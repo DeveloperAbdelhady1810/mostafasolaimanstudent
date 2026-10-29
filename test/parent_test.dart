@@ -135,7 +135,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('a child opens to attendance and course progress', (tester) async {
+  testWidgets('a child opens to attendance only', (tester) async {
     FlutterSecureStorage.setMockInitialValues({'token': 'ptok', 'user': jsonEncode(_parentUser())});
     final seen = <String>[];
     await _boot(tester, _server(seen));
@@ -146,10 +146,8 @@ void main() {
     expect(find.text('Geometry'), findsOneWidget);
     expect(find.text('Absent'), findsWidgets);
 
-    await tester.tap(find.text('Courses').last);
-    await _pump(tester, 10);
-    expect(find.text('Calculus term 1'), findsOneWidget);
-    expect(find.text('Quizzes passed: 2 of 3'), findsOneWidget);
+    expect(find.text('Courses'), findsNothing);
+    expect(find.text('Calculus term 1'), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
   });

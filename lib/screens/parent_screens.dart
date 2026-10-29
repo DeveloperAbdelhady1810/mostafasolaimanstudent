@@ -157,7 +157,6 @@ class _ChildCard extends StatelessWidget {
           Row(children: [
             Expanded(child: _Stat(value: '${child.present}', label: context.tr('present'), color: Brand.primary)),
             Expanded(child: _Stat(value: '${child.absent}', label: context.tr('absent'), color: Brand.danger)),
-            Expanded(child: _Stat(value: '${child.courses}', label: context.tr('courses'), color: Brand.accent)),
           ]),
           const SizedBox(height: 12),
           ClipRRect(
@@ -223,33 +222,22 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
     final p = context.watch<ParentProvider>();
     final lang = context.watch<LocaleProvider>().code;
     final records = p.attendanceOf(widget.child.id);
-    final courses = p.coursesOf(widget.child.id);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    // Attendance only: the app is an attendance companion and shows no course content.
+    return Scaffold(
         appBar: AppBar(
           title: Text(widget.child.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-          bottom: TabBar(
-            labelColor: Brand.primary,
-            indicatorColor: Brand.primary,
-            tabs: [Tab(text: context.tr('nav_attendance')), Tab(text: context.tr('courses'))],
-          ),
         ),
         body: Column(children: [
           if (_failed && (records != null)) Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 0), child: OfflineBanner(text: context.tr('saved_data'))),
           Expanded(
-            child: (records == null || courses == null)
+            child: records == null
                 ? (_loading
                     ? const Center(child: CircularProgressIndicator(color: Brand.primary))
                     : EmptyStateRetry(message: context.tr('children_load_failed'), retryLabel: context.tr('retry'), onRetry: _load))
-                : TabBarView(children: [
-                    RefreshIndicator(color: Brand.primary, onRefresh: _load, child: _AttendanceList(records: records, lang: lang)),
-                    RefreshIndicator(color: Brand.primary, onRefresh: _load, child: _CoursesList(data: courses)),
-                  ]),
+                : RefreshIndicator(color: Brand.primary, onRefresh: _load, child: _AttendanceList(records: records, lang: lang)),
           ),
         ]),
-      ),
     );
   }
 }
@@ -301,53 +289,6 @@ class _AttendanceList extends StatelessWidget {
               decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
               child: Text(context.tr(ok ? 'present' : 'absent'), style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
             ),
-          ]),
-        );
-      },
-    );
-  }
-}
-
-class _CoursesList extends StatelessWidget {
-  const _CoursesList({required this.data});
-  final ChildCourses data;
-
-  @override
-  Widget build(BuildContext context) {
-    if (data.courses.isEmpty) {
-      return ListView(physics: const AlwaysScrollableScrollPhysics(), children: [
-        SizedBox(height: 360, child: EmptyState(icon: Icons.menu_book_rounded, title: context.tr('child_courses_empty'), note: '')),
-      ]);
-    }
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      itemCount: data.courses.length + 1,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, i) {
-        if (i == 0) {
-          return SoftCard(
-            child: Row(children: [
-              const Icon(Icons.quiz_rounded, color: Brand.accent),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(context.tr('quizzes_summary', {'p': data.quizzesPassed, 't': data.quizzesTaken}),
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Brand.text)),
-              ),
-            ]),
-          );
-        }
-        final c = data.courses[i - 1];
-        return SoftCard(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(c.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Brand.text)),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(value: c.progress / 100, minHeight: 8, backgroundColor: Brand.border, color: Brand.primary),
-            ),
-            const SizedBox(height: 6),
-            Text(context.tr('lectures_progress', {'d': c.done, 't': c.total, 'p': c.progress}), style: const TextStyle(fontSize: 12.5, color: Brand.muted)),
           ]),
         );
       },
